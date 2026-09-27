@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flexcil-codex-plugin"
+version = "0.1.0"
+description = "Local Flexcil document tools for Codex and Google Drive"
+requires-python = ">=3.10"
+dependencies = ["Pillow>=12.0,<13", "pypdfium2>=5.0,<6", "reportlab>=4.4,<5"]
+
+[project.scripts]
+flexcil = "flexcil.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["plugins/flexcil-codex-plugin/src"]
