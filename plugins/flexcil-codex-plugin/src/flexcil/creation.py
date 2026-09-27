@@ -84,7 +84,7 @@ def metadata(document, root, drive_id):
 
 def prepare_new(profile, title, pdf=None, folders=None, width=595, height=842, probe=False, drive=None):
     settings = state.load_profile(profile)
-    if not settings.get("sync_verified") and not probe:
+    if not settings.get("new_document_verified") and not probe:
         raise FlexcilError("sync_probe_required", "Use a dedicated test document for initial connection validation")
     drive = drive or Drive(profile)
     capability = drive.probe()  # Prove private-property visibility before preparing remote writes.

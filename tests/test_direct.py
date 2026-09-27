@@ -139,6 +139,16 @@ class FakeDrive:
 
 
 class CreationTests(PrivateTest):
+    def test_existing_note_verification_does_not_skip_new_document_probe(self):
+        profile = state.load_profile("test")
+        profile["sync_verified"] = True
+        state.write_file(state.profile_path("test"), json_bytes(profile), replace=True)
+        drive = FakeDrive()
+        with self.assertRaises(FlexcilError) as error:
+            prepare_new("test", "Report", drive=drive)
+        self.assertEqual(error.exception.code, "sync_probe_required")
+        self.assertEqual(drive.uploads, [])
+
     def test_device_verification_requires_confirmation_and_new_content(self):
         drive = FakeDrive()
         receipt = prepare_new("test", "Report", probe=True, drive=drive)

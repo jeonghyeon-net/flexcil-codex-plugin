@@ -124,6 +124,8 @@ def auth_finish(profile, callback_path):
     token = checked_json(status, body)
     _save_token(profile, pending["client_id"], token)
     private_path(profile, "pending.json").unlink()
+    if Path(callback_path).resolve() == private_path(profile, "callback.txt").resolve():
+        Path(callback_path).unlink()  # This plugin's consumed one-time code only.
     return {"profile": profile, "status": "authenticated", "registration": "unverified; run connection-probe"}
 
 
