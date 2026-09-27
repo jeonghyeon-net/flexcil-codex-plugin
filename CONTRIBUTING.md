@@ -58,7 +58,7 @@ docs/                              사용법·설계·지원 범위·검증 기�
 
 ## 버전과 배포
 
-엔진 버전은 `pyproject.toml`과 `src/flexcil/__init__.py`, 플러그인 기본 버전은 `plugin.json`에서 함께 관리합니다. Codex 캐시 구분용 `+codex.<값>`은 같은 기본 버전의 설치본을 구별합니다. Git 태그는 `v<기본 버전>`입니다.
+엔진 버전은 `pyproject.toml`과 `src/flexcil/__init__.py`, 플러그인 기본 버전은 `plugin.json`에서 함께 관리합니다. Codex 캐시 구분용 `+codex.<값>`은 같은 기본 버전의 설치본을 구별합니다. Git 태그와 GitHub 릴리스 제목은 모두 `v<기본 버전>`만 사용합니다. 제품명이나 설명을 제목 앞뒤에 붙이지 않습니다.
 
 릴리스마다 [CHANGELOG](CHANGELOG.md)에 사용자에게 달라지는 점과 알려진 한계를 기록합니다. 커밋된 변경을 원격에 반영한 뒤 깨끗한 체크아웃에서 검사하고 버전이 있는 ZIP을 만듭니다.
 
@@ -75,10 +75,10 @@ cd ..
 태그와 릴리스는 자동으로 생성하지 않습니다. 게시 권한과 인증된 GitHub CLI가 있는 유지관리자가 검증한 커밋에 주석 태그를 만들고, 검토한 릴리스 설명 파일과 패키지를 게시합니다.
 
 ```sh
-git tag -a v0.1.0 -m 'Flexcil for Codex v0.1.0'
+git tag -a v0.1.0 -m 'v0.1.0'
 git push origin v0.1.0
 gh release create v0.1.0 --verify-tag \
-  --title 'Flexcil for Codex v0.1.0' \
+  --title 'v0.1.0' \
   --notes-file work/release-notes.md \
   dist/flexcil-codex-plugin-v0.1.0.zip \
   dist/flexcil-codex-plugin-v0.1.0.zip.sha256

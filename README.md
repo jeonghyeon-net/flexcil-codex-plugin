@@ -1,5 +1,7 @@
 # Flexcil for Codex
 
+![코드 리뷰와 PDF 문서가 잉크 선을 따라 태블릿의 필기로 이어지는 Flexcil for Codex 커버](docs/assets/flexcil-cover.png)
+
 Codex에서 문서를 만들고, Flexcil에 정리하고, 태블릿에 쓴 필기를 다시 읽습니다.
 
 Google Drive로 동기화하는 Flexcil 도서관을 연결하는 비공식 Codex 플러그인입니다. 다른 스킬이 만든 PDF를 새 문서로 등록하고 폴더에 배치하며, 기존 노트와 페이지를 편집합니다. 개인 연결 정보와 백업은 각 사용자의 컴퓨터에 보관합니다.
