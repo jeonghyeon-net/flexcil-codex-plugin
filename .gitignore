@@ -9,6 +9,8 @@ dist/
 .env*
 work/
 *.flx
+*.flex
+*.list
 *.apk
 *.xapk
 *.dex

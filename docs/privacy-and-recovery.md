@@ -2,6 +2,13 @@
 
 ## 저장 위치
 
+| 환경 | 기본 경로 |
+| --- | --- |
+| macOS | `~/Library/Application Support/flexcil-codex` |
+| Linux | `$XDG_STATE_HOME/flexcil-codex` 또는 `~/.local/state/flexcil-codex` |
+| Windows | `%LOCALAPPDATA%/flexcil-codex` |
+| 별도 위치 | `FLEXCIL_STATE_DIR` 환경 변수 |
+
 공개 배포물은 코드·스킬·문서·합성 테스트만 포함한다. Google Drive 연결 식별자는 서비스 종류를 지정하는 공통 connector ID이며 사용자 계정/토큰이 아니다.
 
 개인 상태에는 라이브러리 ID, 플랫폼, 검증 상태와 변경 작업이 저장된다. 변경 작업에는 민감한 내용이 포함될 수 있는 원본 `.flx`, 후보 `.flx`, 계획과 결과가 있다. 로컬 상태 디렉터리는 POSIX에서 0700, 파일은 0600으로 생성한다. Windows에서는 사용자 디렉터리의 ACL을 따른다. 별도의 자체 암호화는 제공하지 않는다.
