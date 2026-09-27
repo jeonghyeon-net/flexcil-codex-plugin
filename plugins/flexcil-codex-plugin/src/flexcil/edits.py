@@ -100,7 +100,9 @@ def _new_pages(document, operation, pages):
     pages[position:position] = new
     document.entries[attachment_path] = data
     info = document.info
-    info.setdefault("attachments", {})[attachment] = Path(operation.get("pdf", "blank.pdf")).name
+    # The native map stores PDF passwords, not attachment display names.
+    # Inputs have already been opened without a password above.
+    info.setdefault("attachments", {})[attachment] = ""
     document.entries["info"] = json_bytes(info)
     return keys
 

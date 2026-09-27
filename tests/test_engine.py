@@ -34,7 +34,7 @@ def fixture():
     pdf.drawString(36, 800, "Synthetic Flexcil fixture")
     pdf.showPage(); pdf.save()
     points = base64.b64encode(struct.pack("<Iffffff", 2, 0, 0, .1, .2, .1, .1)).decode()
-    entries = {"info": json_bytes({"key": DOC, "name": "Synthetic", "version": "0.0.5", "modifiedDate": 100, "attachments": {DOC: "source.pdf"}, "currentPage": PAGE}),
+    entries = {"info": json_bytes({"key": DOC, "name": "Synthetic", "version": "0.0.5", "modifiedDate": 100, "attachments": {DOC: ""}, "currentPage": PAGE}),
                "pages.index": json_bytes([{"key": PAGE, "version": "0.0.5", "frame": {"width": 595, "height": 842}, "rotate": 0, "attachmentPage": {"file": DOC, "index": 0}}]),
                "attachment/PDF/" + DOC: out.getvalue(), "future/opaque": b"\x00preserve-me\xff",
                "objects/" + PAGE + ".drawings": json_bytes([{"key": INK, "type": 1, "points": points, "start": {"x": .1, "y": .1}, "scale": {"x": 1, "y": 1}, "rotate": 0, "strokeColor": 0xFF000000}]),
@@ -84,6 +84,22 @@ class CodecTests(unittest.TestCase):
     def test_last_page_protected(self):
         doc = fixture(); plan = text_plan(doc); plan["operations"] = [{"op": "remove_page", "page_id": PAGE}]
         with self.assertRaises(FlexcilError): apply_edits(doc, plan)
+
+    def test_inserted_pdf_attachment_value_is_password_not_filename(self):
+        import pypdfium2 as pdfium
+        doc = fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "filename-must-not-be-a-password.pdf"
+            path.write_bytes(doc.entries["attachment/PDF/" + DOC])
+            for op in ({"op": "insert_pdf", "pdf": str(path)}, {"op": "add_blank_page"}):
+                after, _ = apply_edits(doc, {"schema": 1, "expected_sha256": doc.original_sha256, "operations": [op]})
+                after = Document.load(after.to_bytes())
+                attachment_id = after.pages[-1]["attachmentPage"]["file"]
+                password = after.info["attachments"][attachment_id]
+                self.assertEqual(password, "")
+                self.assertEqual(after.info["attachments"][DOC], "")
+                with pdfium.PdfDocument(after.entries["attachment/PDF/" + attachment_id], password=password) as pdf:
+                    self.assertEqual(len(pdf), 1)
 
     def test_remove_object(self):
         doc = fixture(); plan = text_plan(doc); plan["operations"] = [{"op": "remove_object", "page_id": PAGE, "object_id": INK}]

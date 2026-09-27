@@ -1,4 +1,4 @@
-"""JSON CLI for Codex. Transport and document authoring stay outside this engine."""
+"""JSON CLI for the format engine and explicit cloud transaction adapters."""
 from __future__ import annotations
 
 import argparse
@@ -25,6 +25,45 @@ def parser():
     sub = root.add_subparsers(dest="command", required=True)
     sub.add_parser("capabilities")
     sub.add_parser("doctor")
+    for name in ("connection-config", "connect"):
+        p = sub.add_parser(name)
+        p.add_argument("--profile", default="default")
+        if name == "connection-config":
+            p.add_argument("--apk", type=Path, required=True)
+        else:
+            p.add_argument("--client-config", type=Path)
+    for name in ("cloud-tree", "cloud-prepare-edit", "cloud-prepare-library"):
+        p = sub.add_parser(name)
+        p.add_argument("--profile", default="default")
+        if name != "cloud-tree":
+            p.add_argument("--plan", type=Path, required=True)
+            p.add_argument("--probe", action="store_true")
+        if name == "cloud-prepare-edit":
+            p.add_argument("--file-id", required=True)
+    p = sub.add_parser("publish-update")
+    p.add_argument("operation_id")
+    for name in ("connect-start", "connect-finish", "connection-probe", "cloud-list", "cloud-download", "create-document"):
+        p = sub.add_parser(name)
+        p.add_argument("--profile", default="default")
+        if name == "connect-start":
+            p.add_argument("--client-config", type=Path, required=True)
+        elif name == "connect-finish":
+            p.add_argument("--callback-file", type=Path, required=True)
+        elif name == "cloud-download":
+            p.add_argument("--file-id", required=True)
+            p.add_argument("--output", type=Path, required=True)
+        elif name == "create-document":
+            p.add_argument("--title", required=True)
+            p.add_argument("--pdf", type=Path)
+            p.add_argument("--folders", default="[]")
+            p.add_argument("--width", type=float, default=595)
+            p.add_argument("--height", type=float, default=842)
+            p.add_argument("--probe", action="store_true")
+    for name in ("publish-document", "verify-new-document"):
+        p = sub.add_parser(name)
+        p.add_argument("operation_id")
+        if name == "verify-new-document":
+            p.add_argument("--device-confirmed", action="store_true")
     p = sub.add_parser("import-plan")
     p.add_argument("pdf", type=Path)
     p.add_argument("--title", required=True)
@@ -103,12 +142,13 @@ def parser():
 
 
 def capabilities():
-    return {"schema": 1, "version": __version__, "document_formats": ["0.0.4", "0.0.5"], "transport": "Codex Google Drive connector", "desktop_flexcil_required": False,
+    return {"schema": 1, "version": __version__, "document_formats": ["0.0.4", "0.0.5"], "transport": ["Codex Google Drive connector", "Direct Google Drive API with per-user OAuth configuration"], "desktop_flexcil_required": False,
             "local": ["inspect", "extract-text", "objects", "render", "export-pdf", "diff", "edit", "catalog", "tree", "library-edit"],
             "document_edits": ["rename", "add_text", "update_text", "remove_object", "insert_pdf", "add_blank_page", "remove_page", "reorder_pages"],
             "library_edits": ["create_folder", "rename", "move", "trash", "restore"],
             "cloud_updates": "Existing Flexcil-owned files; requires a verified library profile",
-            "new_document_registration": "Requires native Flexcil import. Plain Drive upload does not register a sync document.",
+            "new_document_registration": {"commands": ["create-document", "publish-document", "verify-new-document"], "implementation": "Native file, virtual-folder placement, private metadata, resumable upload and readback", "requires": "connection-probe must verify Flexcil appProperties under the configured OAuth connection", "device_verified": "Android PDF creation and six added ink objects recovered on 2026-09-28; verify each user's profile", "oauth_login_verified": True},
+            "direct_updates": ["cloud-tree", "cloud-prepare-edit", "cloud-prepare-library", "publish-update"],
             "rendering": "PDF backgrounds, approximate ink and text; unsupported layers reported",
             "concurrency": "Fresh byte comparison and readback; connector does not expose atomic If-Match",
             "permanent_delete": "Not automated; use the native trash UI after reviewing references"}
@@ -116,6 +156,38 @@ def capabilities():
 
 def run(args):
     cmd = args.command
+    if cmd in ("connection-config", "connect"):
+        from .connection import discover_config, connect
+        return discover_config(args.profile, args.apk) if cmd == "connection-config" else connect(args.profile, args.client_config)
+    if cmd in ("cloud-tree", "cloud-prepare-edit", "cloud-prepare-library", "publish-update"):
+        from .transactions import cloud_tree, prepare_update, publish_update
+        if cmd == "cloud-tree":
+            return cloud_tree(args.profile)
+        if cmd == "publish-update":
+            return publish_update(args.operation_id)
+        return prepare_update(args.profile, state.read_json(args.plan), file_id=getattr(args, "file_id", None), probe=args.probe)
+    if cmd in ("connect-start", "connect-finish", "connection-probe", "cloud-list", "cloud-download", "create-document", "publish-document", "verify-new-document"):
+        from .direct import Drive, auth_start, auth_finish
+        from .creation import prepare_new, publish_new, verify_new
+        if cmd == "connect-start":
+            return auth_start(args.profile, args.client_config)
+        if cmd == "connect-finish":
+            return auth_finish(args.profile, args.callback_file)
+        if cmd == "publish-document":
+            return publish_new(args.operation_id)
+        if cmd == "verify-new-document":
+            return verify_new(args.operation_id, device_confirmed=args.device_confirmed)
+        if cmd == "create-document":
+            return prepare_new(args.profile, args.title, args.pdf, parse_json(args.folders.encode()), args.width, args.height, args.probe)
+        drive = Drive(args.profile)
+        if cmd == "connection-probe":
+            return drive.probe()
+        if cmd == "cloud-list":
+            drive.probe()
+            return {"files": drive.list(state.load_profile(args.profile)["library_folder_id"])}
+        data = drive.download(args.file_id)
+        state.write_file(args.output, data)
+        return {"output": str(args.output.resolve()), "sha256": hashlib.sha256(data).hexdigest()}
     if cmd == "check-hash":
         digest = hashlib.sha256(args.input.read_bytes()).hexdigest()
         if digest != args.expected:
@@ -132,7 +204,7 @@ def run(args):
         return capabilities()
     if cmd == "doctor":
         import PIL, pypdfium2, reportlab
-        return {"version": __version__, "python": sys.version.split()[0], "pillow": PIL.__version__, "pdfium": str(pypdfium2.PYPDFIUM_INFO), "reportlab": reportlab.Version, "state_directory": str(state.state_root()), "network": "Local engine makes no network calls; use the connected Google Drive app"}
+        return {"version": __version__, "python": sys.version.split()[0], "pillow": PIL.__version__, "pdfium": str(pypdfium2.PYPDFIUM_INFO), "reportlab": reportlab.Version, "state_directory": str(state.state_root()), "network": "Document engine is offline; explicit connection/cloud/create/publish commands use Google HTTPS endpoints"}
     if cmd == "setup":
         return state.configure(args.profile, args.folder_id, args.platform)
     if cmd == "profile":

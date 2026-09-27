@@ -1,4 +1,4 @@
-# Local command contract
+# Command contract
 
 Run `python <plugin>/scripts/flexcil.py --help` for exact arguments. JSON stdout is `{"ok":true,"result":...}` or `{"ok":false,"error":{"code":...,"message":...}}`. Error exit status is 2. New output paths must not already exist.
 
@@ -6,6 +6,17 @@ Run `python <plugin>/scripts/flexcil.py --help` for exact arguments. JSON stdout
 |---|---|
 | Runtime/features | `doctor`, `capabilities` |
 | Library settings | `setup --folder-id ID --profile NAME --platform android`, `profile` |
+| Public connection settings from supplied package | `connection-config --apk app.apk --profile NAME` |
+| System-browser PKCE login | `connect --profile NAME`, `connect-finish --callback-file PATH --profile NAME` |
+| Native property access | `connection-probe --profile NAME` |
+| Fresh cloud library and file mapping | `cloud-tree --profile NAME`, `cloud-list --profile NAME` |
+| Direct download | `cloud-download --profile NAME --file-id ID --output local.flx` |
+| New native document | `create-document --profile NAME --title TITLE --pdf report.pdf --folders '["Engineering","Reviews"]'` |
+| Register prepared new document | `publish-document OPERATION_ID` |
+| Initial new-document device round trip | `verify-new-document OPERATION_ID --device-confirmed` |
+| Prepare direct existing-document edit | `cloud-prepare-edit --profile NAME --file-id ID --plan edits.json` |
+| Prepare direct folder/name/move/trash/restore | `cloud-prepare-library --profile NAME --plan library.json` |
+| Publish/resume a direct update | `publish-update OPERATION_ID` |
 | Virtual folders and trash | `tree documents.list --trash .trash.list` |
 | Join documents to Drive metadata | `catalog documents.list --files metadata.json` |
 | Page IDs, dimensions, native text | `inspect document.flx` |

@@ -1,6 +1,18 @@
 # Google Drive transport
 
-Use actual tool schemas available in the current session. The plugin ships no OAuth client, token, proxy, or cloud service.
+Use the direct connection when configured; otherwise use actual connector schemas. The plugin ships no client configuration, token, proxy, or remote service.
+
+## Direct connection
+
+`connection-probe` checks the native root and library properties. `cloud-tree` returns fresh active/trash lists, item IDs, document-to-file mappings, and plan hashes. `cloud-list` paginates the native root; `cloud-download` saves a selected file to a new local path.
+
+- New document: `create-document` builds a prepared operation, then `publish-document` registers the reserved Drive ID and updates the virtual library. Both raw files and native properties are read back. An initial test uses `--probe` and `verify-new-document --device-confirmed` after the user actually adds a mark.
+- Existing document: download/read the current file, build a matching edit plan, run `cloud-prepare-edit`, then `publish-update`.
+- Folders, moves, names, trash and restore: use a fresh `cloud-tree` result to build a library plan, run `cloud-prepare-library`, then `publish-update`. Document rename automatically updates both the archive title and library title.
+
+Operations keep source/candidate hashes and stable upload metadata. Retrying the same operation skips confirmed steps and resumes its upload session. If another device changed any source, preserve partial results and re-plan. There is still a final read/write race; do not claim atomic transactions.
+
+The remainder describes the connector fallback for existing files.
 
 ## Discover
 
@@ -39,4 +51,4 @@ If interrupted, compare each remote file with its before and candidate hashes. C
 
 `rollback` only prepares restoration if fresh remote bytes exactly match that operation's candidate. It does not upload. Freshly preflight again before writing it. If someone edited the document afterward, recover through a new reviewed plan, not by overwriting with an old backup.
 
-Private `appProperties` belong to the creating app. The Android binary inspected uses the Flexcil marker to enumerate sync files and ordinary Drive modified time to detect document updates. Do not change OAuth identity or claim another app's private properties can be written through the connector.
+Private `appProperties` belong to the creating app. The Android code uses its Flexcil marker to enumerate sync files. The direct connection has demonstrated visibility and creation under the explicitly configured, user-consented OAuth context. The generic connector does not expose equivalent native registration; never infer it from access to the same user's Drive.

@@ -1,6 +1,6 @@
 {
   "name": "flexcil-codex-plugin",
-  "version": "0.1.0+codex.20260927153100",
+  "version": "0.1.0+codex.20260927164118",
   "description": "Browse and organize Flexcil libraries, inspect handwritten notes, and edit synced documents through Codex.",
   "author": {
     "name": "Flexcil Codex Plugin contributors"
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Flexcil",
     "shortDescription": "Manage Flexcil notes and folders with Codex.",
-    "longDescription": "Read PDF and handwritten notes, organize Flexcil folders, edit existing synced documents, and receive PDF artifacts from other skills. New documents require native Flexcil import. Personal libraries and settings stay outside the plugin.",
+    "longDescription": "Read PDFs and handwriting, organize Flexcil folders, edit synced notes, and create new Flexcil documents from other skills' PDFs through a verified direct Google connection. Personal settings, credentials, and backups stay outside the plugin.",
     "developerName": "Flexcil Codex Plugin contributors",
     "category": "Productivity",
     "capabilities": [
