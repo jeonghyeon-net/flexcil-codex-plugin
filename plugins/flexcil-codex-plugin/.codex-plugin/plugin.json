@@ -1,6 +1,6 @@
 {
   "name": "flexcil-codex-plugin",
-  "version": "0.1.0+codex.20260927152730",
+  "version": "0.1.0+codex.20260927153100",
   "description": "Browse and organize Flexcil libraries, inspect handwritten notes, and edit synced documents through Codex.",
   "author": {
     "name": "Flexcil Codex Plugin contributors"
